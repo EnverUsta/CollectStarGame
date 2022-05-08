@@ -35,6 +35,11 @@ export class GameComponent implements OnInit {
   }
 }
 
+enum GameMode {
+  Normal,
+  Alihan,
+}
+
 class MainScene extends Phaser.Scene {
   readonly assetsPath: string = "../../assets/";
   cursors: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -43,6 +48,15 @@ class MainScene extends Phaser.Scene {
   bombs: Phaser.Physics.Arcade.Group;
   score = 0;
   scoreText: Phaser.GameObjects.Text;
+  alihanComplimentText: Phaser.GameObjects.Text;
+  ComplimentAlihan: string[] = [
+    "Alihana sert sert sokmalisin",
+    "Bu hizla gidersen tüm alihanlara sokacaksin",
+    "Alihana kac kere soktuguna bak!!!",
+    "Bil bakalim Enver Alihana kac kez soktu?",
+  ];
+  gameMode: GameMode = GameMode.Normal;
+  addedImage: Phaser.GameObjects.Image;
 
   constructor() {
     super({ key: "main" });
@@ -53,15 +67,18 @@ class MainScene extends Phaser.Scene {
     this.load.image("ground", this.assetsPath + "platform.png");
     this.load.image("star", this.assetsPath + "star.png");
     this.load.image("bomb", this.assetsPath + "bomb.png");
+    this.load.image("alihan", this.assetsPath + "alihan.png");
     this.load.spritesheet("dude", this.assetsPath + "dude.png", {
       frameWidth: 32,
       frameHeight: 48,
     });
+    this.load.image("yiyenAlihan", this.assetsPath + "yiyenAlihan.jpeg");
     console.log("preload method");
   }
 
   create() {
-    this.add.image(400, 300, "sky");
+    this.addedImage = this.add.image(400, 300, "sky");
+    // this.add.image(400, 300, "alihan1");
 
     const platforms = this.physics.add.staticGroup();
 
@@ -122,8 +139,9 @@ class MainScene extends Phaser.Scene {
       this
     );
 
-    this.scoreText = this.add.text(16, 16, "score: 0", {
+    this.scoreText = this.add.text(16, 16, "Score: 0", {
       fontSize: "32px",
+      fontWeight: "bold",
       fill: "#000",
     });
 
@@ -143,7 +161,12 @@ class MainScene extends Phaser.Scene {
     star.disableBody(true, true);
 
     this.score += 10;
-    this.scoreText.setText("Score: " + this.score);
+    this.scoreText.setText(
+      this.gameMode === GameMode.Alihan
+        ? "Alihana " + this.score + " kere soktun"
+        : "Score: " + this.score
+    );
+    console.log(this.gameMode);
 
     if (this.stars.countActive(true) === 0) {
       this.stars.children.iterate((child: Phaser.Physics.Arcade.Sprite) => {
@@ -155,14 +178,47 @@ class MainScene extends Phaser.Scene {
           ? Phaser.Math.Between(400, 800)
           : Phaser.Math.Between(0, 400);
 
-      const bomb = this.bombs.create(x, 16, "bomb");
-      bomb.setBounce(1);
-      bomb.setCollideWorldBounds(true);
-      bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
+      this.bombs.create(x, 16, "bomb");
+      this.bombs.create(x, 16, "bomb");
+      this.bombs.children.iterate((bomb: any) => {
+        bomb.setBounce(1);
+        bomb.setCollideWorldBounds(true);
+        bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
+        console.log("child: ", bomb);
+      });
+      // bomb.setBounce(1);
+      // bomb.setCollideWorldBounds(true);
+      // bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
+    }
+
+    if (this.gameMode === GameMode.Alihan) {
+      if (this.alihanComplimentText) this.alihanComplimentText.destroy();
+      this.alihanComplimentText = this.add.text(
+        this.player.x,
+        this.player.y,
+        this.ComplimentAlihan[
+          Phaser.Math.Between(0, this.ComplimentAlihan.length - 1)
+        ],
+        {
+          font: "bold 30px Arial",
+          fontSize: "24px",
+          fontWeight: "bold",
+          align: "center",
+          wordWrap: { width: 350, useAdvancedWrap: true },
+          // fill: "#000",
+        }
+      );
     }
   }
 
-  hitBomb(player: Phaser.Physics.Arcade.Sprite, bomb: Phaser.Physics.Arcade.Sprite) {
+  hitBomb(
+    player: Phaser.Physics.Arcade.Sprite,
+    bomb: Phaser.Physics.Arcade.Sprite
+  ) {
+    if (this.gameMode === GameMode.Alihan) {
+      this.add.image(500, 500, "yiyenAlihan");
+    }
+
     this.physics.pause();
     player.setTint(0xff0000);
     player.anims.play("turn");
@@ -173,6 +229,17 @@ class MainScene extends Phaser.Scene {
   }
 
   update() {
+    if (
+      this.cursors.shift.isDown &&
+      this.cursors.space.isDown &&
+      this.gameMode != GameMode.Alihan
+    ) {
+      this.stars.children.iterate((child: Phaser.Physics.Arcade.Sprite) => {
+        child.setTexture("alihan");
+      });
+      this.scoreText.setText("Alihana sokmaya baslaa");
+      this.gameMode = GameMode.Alihan;
+    }
     if (this.cursors.left.isDown) {
       this.player.setVelocityX(-160);
       this.player.anims.play("left", true);
