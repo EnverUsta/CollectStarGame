@@ -52,8 +52,9 @@ class MainScene extends Phaser.Scene {
   ComplimentAlihan: string[] = [
     "Alihana sert sert sokmalisin",
     "Bu hizla gidersen tüm alihanlara sokacaksin",
-    "Alihana kac kere soktuguna bak!!!",
+    "Alihana kac kere so  ktuguna bak!!!",
     "Bil bakalim Enver Alihana kac kez soktu?",
+    "Herkes ister sen sokarsin Alihana",
   ];
   gameMode: GameMode = GameMode.Normal;
   addedImage: Phaser.GameObjects.Image;
@@ -186,9 +187,6 @@ class MainScene extends Phaser.Scene {
         bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
         console.log("child: ", bomb);
       });
-      // bomb.setBounce(1);
-      // bomb.setCollideWorldBounds(true);
-      // bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
     }
 
     if (this.gameMode === GameMode.Alihan) {
